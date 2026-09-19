@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace VoxelSurvival
 {
-    // Opt-in executable checks: VoxelSurvival.exe -smokeTests -smokeOutput <folder>.
+    // Opt-in executable checks: Moycraft.exe -smokeTests -smokeOutput <folder>.
     public sealed class RuntimeSmokeTests : MonoBehaviour
     {
         private bool failed;

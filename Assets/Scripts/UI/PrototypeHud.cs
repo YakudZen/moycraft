@@ -33,7 +33,7 @@ namespace VoxelSurvival
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one * scale);
             float w = Screen.width / scale, h = Screen.height / scale;
             Box(new Rect(24,24,260,85), ink); Box(new Rect(24,24,4,85),accent);
-            GUI.Label(new Rect(40,32,230,33), "VOXEL / SURVIVAL", title);
+            GUI.Label(new Rect(40,32,230,33), "Moycraft", title);
             GUI.Label(new Rect(40,69,240,25), "FOUNDATION PROTOTYPE   /   0.1", small);
             GUI.Label(new Rect(26,116,360,22), "SEED " + world.seed + "     CHUNKS " + world.LoadedCount, small);
             GUI.Label(new Rect(26,137,360,22), "WASD move  /  SHIFT run  /  SPACE jump", small);

@@ -1,6 +1,6 @@
-# Voxel Survival
+# Moycraft
 
-My little sandbox project — воксельная 3D-песочница на Unity.
+Moycraft — тестовое название нашей воксельной 3D-песочницы на Unity.
 
 ## Первый этап: основа мира
 
@@ -9,7 +9,7 @@ My little sandbox project — воксельная 3D-песочница на Un
 ### Запуск в Unity
 
 1. Добавьте эту папку через Unity Hub → Add project from disk.
-2. После первой компиляции проект автоматически создаст и откроет сцену `Assets/Scenes/Prototype.unity`, каталог блоков и материалы. Повторно открыть её можно через **Voxel Survival → Create or open prototype**.
+2. После первой компиляции проект автоматически создаст и откроет сцену `Assets/Scenes/Prototype.unity`, каталог блоков и материалы. Повторно открыть её можно через **Moycraft → Create or open prototype**.
 3. Нажмите **Play**, затем щёлкните по игровому окну для управления.
 
 ### Управление
@@ -51,7 +51,7 @@ My little sandbox project — воксельная 3D-песочница на Un
 
 ### Проверки и сборка
 
-В редакторе: **Voxel Survival → Run foundation checks**. Проверяются seed, отрицательные координаты, скрытые грани, стыки, коллайдеры, выгрузка/загрузка, границы мира, тировые ограничения и переполнение панели.
+В редакторе: **Moycraft → Run foundation checks**. Проверяются seed, отрицательные координаты, скрытые грани, стыки, коллайдеры, выгрузка/загрузка, границы мира, тировые ограничения и переполнение панели.
 
 Проверка C# и 46 проверок чистой логики без запуска редактора (нужен установленный .NET SDK): `./Tools/Check-Source.ps1`. Они проверяют инвентарь, инструменты, координаты, направление граней, выбор блока и генерацию; они не заменяют проверки физики и изображения в Unity.
 
@@ -65,12 +65,12 @@ My little sandbox project — воксельная 3D-песочница на Un
 & 'C:/Program Files/Unity/Hub/Editor/6000.5.0f1/Editor/Unity.exe' -batchmode -nographics -quit -projectPath "$PWD" -executeMethod VoxelSurvival.Editor.ProjectSetup.ValidateAndBuild -logFile "$PWD/build.log"
 ```
 
-Сборка создаётся в `Builds/Windows`. Переменная окружения `VOXEL_BUILD_PATH` позволяет указать другой путь к exe.
+Сборка создаётся в `Builds/Windows/Moycraft.exe`. Переменная окружения `VOXEL_BUILD_PATH` позволяет указать другой путь к exe. В уже открывавшемся проекте название продукта обновится после компиляции скриптов; существующий exe нужно пересобрать.
 
 Для проверки запуска, движения, прыжка, взаимодействия и коллизий в готовой сборке:
 
 ```powershell
-./Builds/Windows/VoxelSurvival.exe -smokeTests -smokeOutput "$PWD/Builds/Smoke" -logFile "$PWD/Builds/runtime.log"
+./Builds/Windows/Moycraft.exe -smokeTests -smokeOutput "$PWD/Builds/Smoke" -logFile "$PWD/Builds/runtime.log"
 ```
 
 Проверка создаёт `runtime-results.json` и снимок `prototype.png`, затем закрывает приложение. Код выхода 0 означает успех. Автопроверки запускайте отдельно от обычной игры.

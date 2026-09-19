@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace VoxelSurvival
 {
-    [CreateAssetMenu(menuName = "Voxel Survival/Block Catalog")]
+    [CreateAssetMenu(menuName = "Moycraft/Block Catalog")]
     public sealed class BlockCatalog : ScriptableObject
     {
         public BlockDefinition[] blocks;

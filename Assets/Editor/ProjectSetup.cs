@@ -14,13 +14,19 @@ namespace VoxelSurvival.Editor
         [InitializeOnLoadMethod]
         private static void FirstImport()
         {
-            if (Application.isBatchMode || File.Exists(ScenePath)) return;
+            if (Application.isBatchMode) return;
             EditorApplication.delayCall += () =>
             {
-                if (!EditorApplication.isPlayingOrWillChangePlaymode && !File.Exists(ScenePath)) CreateProject();
+                if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+                if (PlayerSettings.productName != "Moycraft")
+                {
+                    PlayerSettings.productName = "Moycraft";
+                    AssetDatabase.SaveAssets();
+                }
+                if (!File.Exists(ScenePath)) CreateProject();
             };
         }
-        [MenuItem("Voxel Survival/Create or open prototype")]
+        [MenuItem("Moycraft/Create or open prototype")]
         public static void CreateProject()
         {
             Directory.CreateDirectory("Assets/Scenes"); Directory.CreateDirectory("Assets/Data/Blocks");
@@ -103,7 +109,7 @@ namespace VoxelSurvival.Editor
             }
             else EditorSceneManager.OpenScene(ScenePath);
             EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
-            PlayerSettings.companyName="YakudZen"; PlayerSettings.productName="Voxel Survival";
+            PlayerSettings.companyName="YakudZen"; PlayerSettings.productName="Moycraft";
             PlayerSettings.bundleVersion="0.1.0"; PlayerSettings.defaultScreenWidth=1280; PlayerSettings.defaultScreenHeight=720;
             PlayerSettings.fullScreenMode=FullScreenMode.Windowed; PlayerSettings.runInBackground=false;
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Standalone,ScriptingImplementation.Mono2x);
@@ -125,7 +131,7 @@ namespace VoxelSurvival.Editor
         {
             CreateProject(); PrototypeChecks.Run();
             string output=Environment.GetEnvironmentVariable("VOXEL_BUILD_PATH");
-            if(string.IsNullOrEmpty(output)) output="Builds/Windows/VoxelSurvival.exe";
+            if(string.IsNullOrEmpty(output)) output="Builds/Windows/Moycraft.exe";
             Directory.CreateDirectory(Path.GetDirectoryName(output));
             var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{
                 scenes=new[]{ScenePath},locationPathName=output,target=BuildTarget.StandaloneWindows64,

@@ -13,7 +13,7 @@ namespace VoxelSurvival.Editor
             if(!condition) throw new Exception("CHECK FAILED: "+description);
             count++; Debug.Log("PASS: "+description);
         }
-        [MenuItem("Voxel Survival/Run foundation checks")]
+        [MenuItem("Moycraft/Run foundation checks")]
         public static void Run()
         {
             count=0;

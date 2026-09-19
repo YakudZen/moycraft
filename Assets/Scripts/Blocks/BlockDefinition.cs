@@ -6,7 +6,7 @@ namespace VoxelSurvival
     public enum BlockId : byte { Air, Grass, Dirt, Stone, Wood, Leaves, Sand, Gravel, Ice, Water, Lava, Fire }
     public enum ToolKind : byte { Hand, Pickaxe, Axe, Shovel }
 
-    [CreateAssetMenu(menuName = "Voxel Survival/Block")]
+    [CreateAssetMenu(menuName = "Moycraft/Block")]
     public sealed class BlockDefinition : ScriptableObject
     {
         public BlockId id;
