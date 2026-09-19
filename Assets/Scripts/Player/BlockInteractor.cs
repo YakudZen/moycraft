@@ -32,7 +32,7 @@ namespace VoxelSurvival
         private void Notify(string value) { Message = value; messageUntil = Time.unscaledTime + 2; }
         public bool TryBreak(Vector3Int p)
         {
-            if (!world.IsLoaded(p) || Vector3.Distance(player.eyes.transform.position, p + Vector3.one * 0.5f) > reach + 0.87f) return false;
+            if (!world.IsLoaded(p) || !VoxelRaycaster.WithinReach(player.eyes.transform.position, p, reach)) return false;
             var block = world.catalog.Get(world.GetBlock(p));
             if (block.id == BlockId.Air || p.y == 0) { Notify("Foundation cannot be mined"); return false; }
             if (!block.CanHarvest(hotbar.Current.tool, hotbar.Current.tier)) { Notify("Requires " + block.preferredTool + " tier " + block.minimumToolTier); return false; }
@@ -43,7 +43,7 @@ namespace VoxelSurvival
         public bool TryPlace(Vector3Int p)
         {
             if (hotbar.Current.Empty || hotbar.Current.IsTool || world.GetBlock(p) != BlockId.Air) return false;
-            if (Vector3.Distance(player.eyes.transform.position, p + Vector3.one * 0.5f) > reach + 0.87f) return false;
+            if (!VoxelRaycaster.WithinReach(player.eyes.transform.position, p, reach)) return false;
             if (!world.catalog.Get(hotbar.Current.block).placeable) return false;
             // A slightly inset box allows placement directly under the feet without clipping the capsule.
             var bounds = new Bounds(p + Vector3.one * 0.5f, Vector3.one * 0.998f);
@@ -52,20 +52,25 @@ namespace VoxelSurvival
             hotbar.ConsumeSelected(); return true;
         }
         private void ResetMining() { miningTime = 0; Progress = 0; miningSlot = -1; }
-        private void Update()
+        private void LateUpdate()
         {
             if (Time.unscaledTime > messageUntil) Message = "";
             if (!player.CanAct) { HasTarget = false; outline.gameObject.SetActive(false); ResetMining(); return; }
             for (int i = 0; i < Hotbar.Capacity; i++)
                 if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1+i))) hotbar.Select(i);
             if (Input.mouseScrollDelta.y != 0) hotbar.Select(hotbar.Selected - (int)Mathf.Sign(Input.mouseScrollDelta.y));
-            var ray = new Ray(player.eyes.transform.position, player.eyes.transform.forward);
-            HasTarget = Physics.Raycast(ray, out var hit, reach, ~0, QueryTriggerInteraction.Ignore) && hit.collider.GetComponent<VoxelChunk>() != null;
+            // Query after movement/look using the camera rendered this frame.
+            HasTarget = VoxelRaycaster.Cast(world, player.eyes.transform.position,
+                player.eyes.transform.forward, reach, out var hit);
             outline.gameObject.SetActive(HasTarget);
             if (!HasTarget) { ResetMining(); return; }
-            Target = Vector3Int.FloorToInt(hit.point - hit.normal * 0.01f);
+            Target = hit.cell;
             outline.position = (Vector3)Target - Vector3.one * 0.002f;
-            if (Input.GetMouseButtonDown(1)) { TryPlace(Vector3Int.FloorToInt(hit.point + hit.normal * 0.01f)); ResetMining(); return; }
+            if (Input.GetMouseButtonDown(1))
+            {
+                if (hit.normal != Vector3Int.zero) TryPlace(hit.Adjacent);
+                ResetMining(); return;
+            }
             if (!Input.GetMouseButton(0)) { ResetMining(); return; }
             var id = world.GetBlock(Target);
             if (miningTarget != Target || miningSlot != hotbar.Selected || miningId != id)

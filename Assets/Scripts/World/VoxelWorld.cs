@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace VoxelSurvival
 {
-    public sealed class VoxelWorld : MonoBehaviour
+    public sealed class VoxelWorld : MonoBehaviour, IVoxelRayQuery
     {
         public BlockCatalog catalog;
         public Material blockMaterial;
@@ -28,6 +28,13 @@ namespace VoxelSurvival
         }
         private void Awake() { if (catalog != null) Initialize(); }
         public bool IsLoaded(Vector3Int position) => chunks.ContainsKey(ChunkData.Coordinate(position.x, position.z));
+        public bool TryGetSolid(Vector3Int position, out bool solid)
+        {
+            solid = false;
+            if (!IsLoaded(position)) return false;
+            solid = catalog.Get(GetBlock(position)).solid;
+            return true;
+        }
         public BlockId GetBlock(Vector3Int p)
         {
             if (p.y < 0 || p.y >= TerrainGenerator.Height) return BlockId.Air;

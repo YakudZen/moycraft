@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 using VoxelSurvival;
 using UnityEngine;
 
-public static class ManagedChecks
+public static partial class ManagedChecks
 {
     static int passed;
     static void Check(bool condition,string text)
@@ -55,6 +55,8 @@ public static class ManagedChecks
             Vector3 cross=Vector3.Cross(corners[face,1]-corners[face,0],corners[face,2]-corners[face,0]);
             Check(Vector3.Dot(cross,VoxelChunk.Neighbors[face])>0.99f,"face "+face+" winding points outward");
         }
+        RayChecks();
+        GenerationChecks();
         Console.WriteLine("MANAGED_CHECKS_OK: " + passed);
     }
 }
