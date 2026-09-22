@@ -22,7 +22,9 @@ namespace VoxelSurvival
         private void Start()
         {
             var go = new GameObject("Block selection"); outline = go.transform;
-            go.AddComponent<MeshRenderer>().sharedMaterial = outlineMaterial;
+            var renderer = go.AddComponent<MeshRenderer>(); renderer.sharedMaterial = outlineMaterial;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
             outlineMesh = new Mesh { name = "Selection wire cube" };
             outlineMesh.vertices = new[] {new Vector3(0,0,0),new(1,0,0),new(1,1,0),new(0,1,0),new(0,0,1),new(1,0,1),new(1,1,1),new(0,1,1)};
             outlineMesh.SetIndices(new[] {0,1,1,2,2,3,3,0,4,5,5,6,6,7,7,4,0,4,1,5,2,6,3,7}, MeshTopology.Lines, 0);

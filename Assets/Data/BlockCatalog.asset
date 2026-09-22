@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78844021e04c42f1a1527229dd87f1ea, type: 3}
+  m_Name: BlockCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::VoxelSurvival.BlockCatalog
+  blocks:
+  - {fileID: 11400000, guid: 2c9938c976bc5574497b3065a055b5db, type: 2}
+  - {fileID: 11400000, guid: 4201abee5d9cc8d44844fb829f7a4372, type: 2}
+  - {fileID: 11400000, guid: e09db56b31a4d5445af465ac1f647950, type: 2}
+  - {fileID: 11400000, guid: 17683241737f14b45984be48d83ee02e, type: 2}
+  - {fileID: 11400000, guid: f88c75494581aef489f09e01d76c9e89, type: 2}
+  - {fileID: 11400000, guid: ab340067c8d5c884f96869f917c597d9, type: 2}
+  - {fileID: 11400000, guid: 2fc462668288de9488e3a952209ff191, type: 2}
+  - {fileID: 11400000, guid: cbfef06badc18bf449a05fabb9cb12fa, type: 2}
+  - {fileID: 11400000, guid: ded923a2e227d914db3b09352012f0ae, type: 2}
+  - {fileID: 11400000, guid: ecf9a872185fb3f4c9b0576ebc7b9929, type: 2}
+  - {fileID: 11400000, guid: 385c41567e42f5e4f96428be2ea509e2, type: 2}
+  - {fileID: 11400000, guid: 0cdddaf2a5fd3e8468f6940585c6be44, type: 2}

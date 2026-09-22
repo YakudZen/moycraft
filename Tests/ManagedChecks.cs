@@ -57,6 +57,13 @@ public static partial class ManagedChecks
         }
         RayChecks();
         GenerationChecks();
+        LightingChecks();
+        Check(DaylightCycle.Daylight(0) == 0 && DaylightCycle.Daylight(1) == 0, "Midnight and wrapped midnight have no sunlight");
+        Check(DaylightCycle.Daylight(0.5f) == 1, "Noon has full sunlight");
+        Check(DaylightCycle.Daylight(0.26f) < DaylightCycle.Daylight(0.28f) && DaylightCycle.Daylight(0.28f) < DaylightCycle.Daylight(0.30f),
+            "Sunrise brightens progressively");
+        Check(Math.Abs(DaylightCycle.Daylight(0.27f)-DaylightCycle.Daylight(0.73f)) < 0.00001f, "Sunset mirrors sunrise without a midnight jump");
+        Check(DaylightCycle.WrapTime(1.25) == 0.25f && DaylightCycle.WrapTime(-0.25) == 0.75f, "Day cycle wraps forward and backward");
         Console.WriteLine("MANAGED_CHECKS_OK: " + passed);
     }
 }

@@ -38,6 +38,7 @@ namespace VoxelSurvival
             GUI.Label(new Rect(26,116,360,22), "SEED " + world.seed + "     CHUNKS " + world.LoadedCount, small);
             GUI.Label(new Rect(26,137,360,22), "WASD move  /  SHIFT run  /  SPACE jump", small);
             GUI.Label(new Rect(26,157,400,22), "LMB hold to mine  /  RMB place  /  ESC pause", small);
+            GUI.Label(new Rect(26,177,400,22), "F portable lantern", small);
             Box(new Rect(w/2-6,h/2-1,12,2),Color.white); Box(new Rect(w/2-1,h/2-6,2,12),Color.white);
             if (interaction.HasTarget)
             {

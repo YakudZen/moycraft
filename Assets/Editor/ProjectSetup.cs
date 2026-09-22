@@ -24,11 +24,20 @@ namespace VoxelSurvival.Editor
                     AssetDatabase.SaveAssets();
                 }
                 if (!File.Exists(ScenePath)) CreateProject();
+                else
+                {
+                    UrpProjectSetup.EnsurePipeline();
+                    var blocks = AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/Blocks.mat");
+                    var outline = AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/Outline.mat");
+                    if (blocks != null && outline != null) UrpProjectSetup.UpgradeMaterials(blocks, outline);
+                    AssetDatabase.SaveAssets();
+                }
             };
         }
         [MenuItem("Moycraft/Create or open prototype")]
         public static void CreateProject()
         {
+            UrpProjectSetup.EnsurePipeline();
             Directory.CreateDirectory("Assets/Scenes"); Directory.CreateDirectory("Assets/Data/Blocks");
             Directory.CreateDirectory("Assets/Art"); AssetDatabase.Refresh();
             var catalog = AssetDatabase.LoadAssetAtPath<BlockCatalog>("Assets/Data/BlockCatalog.asset");
@@ -77,23 +86,25 @@ namespace VoxelSurvival.Editor
                 var importer=(TextureImporter)AssetImporter.GetAtPath("Assets/Art/BlockAtlas.png");
                 importer.filterMode=FilterMode.Point; importer.mipmapEnabled=false; importer.textureCompression=TextureImporterCompression.Uncompressed;
                 importer.wrapMode=TextureWrapMode.Clamp; importer.SaveAndReimport();
-                material=new Material(Shader.Find("Standard")); material.mainTexture=AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Art/BlockAtlas.png");
-                material.SetFloat("_Glossiness",0); material.SetFloat("_Metallic",0);
+                material=new Material(UrpProjectSetup.RequireShader("Moycraft/Voxel Lit"));
+                material.SetTexture("_BaseMap",AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Art/BlockAtlas.png"));
+                material.SetFloat("_Smoothness",0); material.SetFloat("_Metallic",0);
                 AssetDatabase.CreateAsset(material,"Assets/Art/Blocks.mat");
             }
             var outline=AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/Outline.mat");
             if (outline==null)
             {
-                outline=new Material(Shader.Find("Unlit/Color")); outline.color=new Color(0.91f,1,0.64f);
+                outline=new Material(UrpProjectSetup.RequireShader("Universal Render Pipeline/Unlit")); outline.SetColor("_BaseColor",new Color(0.91f,1,0.64f));
                 AssetDatabase.CreateAsset(outline,"Assets/Art/Outline.mat");
             }
+            UrpProjectSetup.UpgradeMaterials(material,outline);
             if (!File.Exists(ScenePath))
             {
                 var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
                 var root=new GameObject("Prototype bootstrap").AddComponent<PrototypeBootstrap>();
                 root.catalog=catalog; root.blockMaterial=material; root.outlineMaterial=outline;
                 var sun=new GameObject("Sun").AddComponent<Light>(); sun.type=LightType.Directional; sun.intensity=1.15f;
-                sun.color=new Color(1,0.94f,0.82f); sun.shadows=LightShadows.Soft; sun.shadowBias=0.03f;
+                sun.color=new Color(1,0.94f,0.82f); sun.shadows=LightShadows.None; sun.shadowBias=0.03f;
                 sun.transform.rotation=Quaternion.Euler(48,-35,0); RenderSettings.sun=sun;
                 RenderSettings.ambientMode=AmbientMode.Trilight;
                 RenderSettings.ambientSkyColor=new Color(0.65f,0.76f,0.89f);
@@ -105,6 +116,8 @@ namespace VoxelSurvival.Editor
                 var sky=new Material(Shader.Find("Skybox/Procedural")); sky.SetFloat("_AtmosphereThickness",0.8f);
                 sky.SetColor("_SkyTint",new Color(0.47f,0.58f,0.68f)); sky.SetColor("_GroundColor",RenderSettings.fogColor);
                 AssetDatabase.CreateAsset(sky,"Assets/Art/Sky.mat"); RenderSettings.skybox=sky;
+                PlayerSettings.colorSpace=ColorSpace.Linear;
+                UrpProjectSetup.ConfigureSceneLighting();
                 EditorSceneManager.SaveScene(scene,ScenePath);
             }
             else EditorSceneManager.OpenScene(ScenePath);
@@ -113,7 +126,7 @@ namespace VoxelSurvival.Editor
             PlayerSettings.bundleVersion="0.1.0"; PlayerSettings.defaultScreenWidth=1280; PlayerSettings.defaultScreenHeight=720;
             PlayerSettings.fullScreenMode=FullScreenMode.Windowed; PlayerSettings.runInBackground=false;
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Standalone,ScriptingImplementation.Mono2x);
-            QualitySettings.vSyncCount=0; QualitySettings.shadowDistance=45; QualitySettings.antiAliasing=2;
+            QualitySettings.vSyncCount=0;
             var settings=new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset")[0]);
             var input=settings.FindProperty("activeInputHandler"); if(input!=null) {input.intValue=0; settings.ApplyModifiedPropertiesWithoutUndo();}
             AssetDatabase.SaveAssets();

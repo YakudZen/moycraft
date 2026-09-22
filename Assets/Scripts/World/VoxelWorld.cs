@@ -18,6 +18,8 @@ namespace VoxelSurvival
         private readonly Dictionary<Vector2Int, Dictionary<Vector3Int, BlockId>> chunkEdits = new();
         private readonly Queue<Vector2Int> pending = new();
         private readonly List<Vector2Int> removal = new();
+        private readonly Queue<Vector2Int> pendingLight = new();
+        private readonly HashSet<Vector2Int> dirtyLight = new();
         private Vector2Int center = new(int.MaxValue, int.MaxValue);
         private int lastDistance;
 
@@ -60,16 +62,50 @@ namespace VoxelSurvival
             if (lx == ChunkData.Size-1) Rebuild(coord + Vector2Int.right);
             if (lz == 0) Rebuild(coord + Vector2Int.down);
             if (lz == ChunkData.Size-1) Rebuild(coord + Vector2Int.up);
+            // A roof changes its whole column; sideways propagation reaches at most 14 cells.
+            for (int dz = -1; dz <= 1; dz++) for (int dx = -1; dx <= 1; dx++)
+            {
+                var affected = coord + new Vector2Int(dx,dz);
+                bool rebuilt = (dx == 0 && dz == 0) ||
+                    (dz == 0 && ((dx == -1 && lx == 0) || (dx == 1 && lx == ChunkData.Size-1))) ||
+                    (dx == 0 && ((dz == -1 && lz == 0) || (dz == 1 && lz == ChunkData.Size-1)));
+                if (!rebuilt && chunks.ContainsKey(affected) && dirtyLight.Add(affected)) pendingLight.Enqueue(affected);
+            }
             return true;
         }
         private void Rebuild(Vector2Int coord) { if (chunks.TryGetValue(coord, out var chunk)) chunk.Rebuild(); }
-        public void LoadChunk(Vector2Int coord)
+        public VoxelSkylight BuildSkylight(Vector2Int coordinate)
         {
-            if (chunks.ContainsKey(coord)) return;
+            // Resolve nine chunk references once instead of doing dictionary/catalog lookups
+            // for every cell of the padded lighting volume.
+            var data = new ChunkData[9];
+            for (int z = -1; z <= 1; z++) for (int x = -1; x <= 1; x++)
+            {
+                var coord = coordinate + new Vector2Int(x,z);
+                data[x+1+3*(z+1)] = chunks.TryGetValue(coord,out var chunk) ? chunk.Data : ReadChunkData(coord);
+            }
+            var opaque = new bool[256];
+            foreach (var definition in catalog.blocks) opaque[(byte)definition.id] = definition.opaque;
+            int ox = coordinate.x * ChunkData.Size, oz = coordinate.y * ChunkData.Size;
+            return new VoxelSkylight(ox,oz,ChunkData.Size,TerrainGenerator.Height,(x,y,z) =>
+            {
+                int sx = x-ox+ChunkData.Size, sz = z-oz+ChunkData.Size;
+                return opaque[(byte)data[sx/ChunkData.Size+3*(sz/ChunkData.Size)].Get(sx%ChunkData.Size,y,sz%ChunkData.Size)];
+            });
+        }
+
+        private ChunkData ReadChunkData(Vector2Int coord)
+        {
             var data = new ChunkData(coord, Generator);
             if (chunkEdits.TryGetValue(coord, out var changes))
                 foreach (var change in changes)
                     data.Set(ChunkData.Local(change.Key.x), change.Key.y, ChunkData.Local(change.Key.z), change.Value);
+            return data;
+        }
+        public void LoadChunk(Vector2Int coord)
+        {
+            if (chunks.ContainsKey(coord)) return;
+            var data = ReadChunkData(coord);
             var go = new GameObject("Chunk " + coord.x + ", " + coord.y);
             go.transform.SetParent(transform, false);
             var chunk = go.AddComponent<VoxelChunk>();
@@ -88,6 +124,13 @@ namespace VoxelSurvival
         }
         private void Update()
         {
+            // Budget one neighboring light update per frame; the edited chunk updates immediately.
+            while (pendingLight.Count > 0)
+            {
+                var coord = pendingLight.Dequeue(); dirtyLight.Remove(coord);
+                if (!chunks.TryGetValue(coord,out var chunk)) continue;
+                chunk.RefreshLighting(); break;
+            }
             if (viewer == null) return;
             var next = ChunkData.Coordinate(Mathf.FloorToInt(viewer.position.x), Mathf.FloorToInt(viewer.position.z));
             if (next != center || lastDistance != viewDistance)

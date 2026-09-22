@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 namespace VoxelSurvival
 {
@@ -31,6 +32,13 @@ namespace VoxelSurvival
             cameraGo.transform.SetParent(go.transform,false); cameraGo.transform.localPosition = new Vector3(0,1.62f,0);
             Player.eyes = cameraGo.AddComponent<Camera>(); Player.eyes.nearClipPlane = 0.04f;
             Player.eyes.farClipPlane = 180; Player.eyes.fieldOfView = 75; cameraGo.AddComponent<AudioListener>();
+            Player.eyes.allowMSAA = true;
+            Player.eyes.GetUniversalAdditionalCameraData().renderShadows = true;
+            var lantern = new GameObject("Portable lantern");
+            lantern.transform.SetParent(cameraGo.transform,false);
+            // At the eye position the lamp stays inside the player's collision volume.
+            lantern.AddComponent<PlayerLantern>().player = Player;
+            if (GetComponent<DaylightCycle>() == null) gameObject.AddComponent<DaylightCycle>();
             Inventory = go.AddComponent<Hotbar>();
             Interaction = go.AddComponent<BlockInteractor>(); Interaction.world = World; Interaction.player = Player;
             Interaction.hotbar = Inventory; Interaction.outlineMaterial = outlineMaterial;

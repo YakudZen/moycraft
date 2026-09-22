@@ -10,6 +10,8 @@ namespace VoxelSurvival
         public ChunkData Data { get; private set; }
         private Mesh mesh;
         private VoxelWorld world;
+        private readonly List<Vector3Int> lightCells = new();
+        private readonly List<Color32> lightColors = new();
         public static readonly Vector3Int[] Neighbors = {
             Vector3Int.right, Vector3Int.left, Vector3Int.up, Vector3Int.down,
             Vector3Int.forward, Vector3Int.back
@@ -26,13 +28,19 @@ namespace VoxelSurvival
         {
             world = owner; Data = data;
             transform.position = new Vector3(data.coordinate.x * ChunkData.Size, 0, data.coordinate.y * ChunkData.Size);
-            GetComponent<MeshRenderer>().sharedMaterial = owner.blockMaterial;
+            var renderer = GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = owner.blockMaterial;
+            // Hidden faces are culled, including faces at chunk boundaries. Cast from
+            // either side of the remaining shell without making the visible material two-sided.
+            renderer.shadowCastingMode = ShadowCastingMode.TwoSided;
+            renderer.receiveShadows = true;
             mesh = new Mesh { name = "Chunk " + data.coordinate, indexFormat = IndexFormat.UInt32 };
             GetComponent<MeshFilter>().sharedMesh = mesh;
             Rebuild();
         }
         public void Rebuild()
         {
+            lightCells.Clear();
             var vertices = new List<Vector3>(); var normals = new List<Vector3>();
             var uvs = new List<Vector2>(); var triangles = new List<int>();
             int ox = Data.coordinate.x * ChunkData.Size, oz = Data.coordinate.y * ChunkData.Size;
@@ -51,6 +59,7 @@ namespace VoxelSurvival
                             var neighbor = world.GetBlock(new Vector3Int(ox + x + n.x, y + n.y, oz + z + n.z));
                             if (world.catalog.Get(neighbor).opaque) continue;
                             int first = vertices.Count;
+                            lightCells.Add(new Vector3Int(ox+x+n.x,y+n.y,oz+z+n.z));
                             int tile = definition.Tile(face);
                             float u = tile % 4 * 0.25f, v = tile / 4 * 0.25f;
                             const float inset = 0.5f / 64f;
@@ -67,7 +76,25 @@ namespace VoxelSurvival
             GetComponent<MeshCollider>().sharedMesh = null;
             mesh.Clear(); mesh.SetVertices(vertices); mesh.SetNormals(normals);
             mesh.SetUVs(0, uvs); mesh.SetTriangles(triangles, 0); mesh.RecalculateBounds();
+            RefreshLighting();
             if (vertices.Count > 0) GetComponent<MeshCollider>().sharedMesh = mesh;
+        }
+        public void RefreshLighting()
+        {
+            if (mesh == null) return;
+            var sky = world.BuildSkylight(Data.coordinate);
+            lightColors.Clear();
+            foreach (var cell in lightCells)
+            {
+                byte level = (byte)(sky.Get(cell.x,cell.y,cell.z) * 17);
+                // Encode the display curve before quantizing so small openings do not
+                // round straight to black in the 8-bit mesh color channel.
+                byte ambient = (byte)Mathf.RoundToInt(Mathf.Sqrt(sky.GetAmbient(cell.x,cell.y,cell.z)) * 255);
+                var color = new Color32(ambient,level,0,255);
+                for (int i = 0; i < 4; i++) lightColors.Add(color);
+            }
+            // Updating light does not recook the collider or regenerate the geometry.
+            mesh.SetColors(lightColors);
         }
         private void OnDestroy()
         {

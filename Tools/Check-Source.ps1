@@ -1,6 +1,7 @@
 param(
     [string]$UnityData = 'C:/Program Files/Unity/Hub/Editor/6000.5.0f1/Editor/Data',
-    [string]$Dotnet = 'dotnet'
+    [string]$Dotnet = 'dotnet',
+    [string]$PackageAssemblies = ''
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -16,6 +17,11 @@ $compiler = Join-Path $match.Groups[2].Value ($match.Groups[1].Value + '/Roslyn/
 $runtimeMajor = $match.Groups[1].Value.Split('.')[0]
 $references = @(Get-ChildItem "$UnityData/NetStandard/ref/2.1.0" -Filter '*.dll')
 $references += Get-ChildItem "$UnityData/Managed/UnityEngine" -Filter '*.dll'
+if (!$PackageAssemblies) { $PackageAssemblies = Join-Path $projectRoot 'Library/ScriptAssemblies' }
+if (!(Test-Path (Join-Path $PackageAssemblies 'Unity.RenderPipelines.Universal.Runtime.dll'))) {
+    throw 'Open the project in Unity once to compile URP, or pass -PackageAssemblies pointing to its Library/ScriptAssemblies.'
+}
+$references += Get-ChildItem $PackageAssemblies -Filter '*.dll' | Where-Object { $_.Name -notlike 'Assembly-CSharp*' }
 $sources = @(Get-ChildItem "$projectRoot/Assets" -Recurse -Filter '*.cs')
 $sources += Get-ChildItem "$projectRoot/Tests" -Filter '*.cs'
 $assembly = Join-Path $output 'ManagedChecks.dll'
